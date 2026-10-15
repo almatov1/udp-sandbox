@@ -9,6 +9,7 @@ find_package(raylib REQUIRED)
 
 add_executable(udp_sandbox
     src/main.cpp
+    src/net/udp_client.cpp
     src/game/player.cpp
     src/game/renderer.cpp
 )

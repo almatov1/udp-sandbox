@@ -1,6 +1,8 @@
-#include <cmath>
 #include "game/player.h"
 #include "game_config.h"
+
+#include <algorithm>
+#include <cmath>
 
 void InitializePlayer(Player& player)
 {
@@ -12,39 +14,72 @@ void InitializePlayer(Player& player)
     };
 }
 
-void UpdatePlayer(Player& player, float deltaTime)
+void UpdatePredictedPlayer(Player& player, std::uint8_t buttons,
+                           float deltaTime)
 {
-    // Normalize diagonal movement so it isn't faster than horizontal/vertical movement.
-    Vector2 direction = {0.0f, 0.0f};
+    float dx = 0.0f;
+    float dy = 0.0f;
 
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    direction.y -= 1.0f;
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))  direction.y += 1.0f;
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))  direction.x -= 1.0f;
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) direction.x += 1.0f;
+    if (buttons & (1u << 2)) dx -= 1.0f; // A / Left
+    if (buttons & (1u << 3)) dx += 1.0f; // D / Right
+    if (buttons & (1u << 0)) dy -= 1.0f; // W / Up
+    if (buttons & (1u << 1)) dy += 1.0f; // S / Down
 
-    if (direction.x != 0.0f || direction.y != 0.0f) {
-        float length = sqrtf(direction.x * direction.x +
-                     direction.y * direction.y);
+    const float length = std::sqrt(dx * dx + dy * dy);
 
-        if (length > 0.0f)
-        {
-            direction.x /= length;
-            direction.y /= length;
-        }
-        player.position.x += direction.x * player.speed * deltaTime;
-        player.position.y += direction.y * player.speed * deltaTime;
+    if (length > 0.0f) {
+        dx /= length;
+        dy /= length;
+
+        player.position.x += dx * player.speed * deltaTime;
+        player.position.y += dy * player.speed * deltaTime;
     }
 
-    KeepPlayerInsideWorld(player);
+    player.position.x = std::clamp(
+        player.position.x, 0.0f,
+        static_cast<float>(GameConfig::WindowWidth) - player.size);
+
+    player.position.y = std::clamp(
+        player.position.y, 0.0f,
+        static_cast<float>(GameConfig::WindowHeight) - player.size);
 }
 
-void KeepPlayerInsideWorld(Player& player)
+void ReconcilePlayer(Player& player, Vector2 authoritativePosition,
+                     float deltaTime)
 {
-    const float maxX = static_cast<float>(GameConfig::WindowWidth) - player.size;
-    const float maxY = static_cast<float>(GameConfig::WindowHeight) - player.size;
+    player.serverPosition = authoritativePosition;
 
-    if (player.position.x < 0.0f) player.position.x = 0.0f;
-    if (player.position.y < 0.0f) player.position.y = 0.0f;
-    if (player.position.x > maxX) player.position.x = maxX;
-    if (player.position.y > maxY) player.position.y = maxY;
+    const float dx = authoritativePosition.x - player.position.x;
+    const float dy = authoritativePosition.y - player.position.y;
+    const float error = std::sqrt(dx * dx + dy * dy);
+
+    // A large difference usually means that the local prediction diverged.
+    if (error > 120.0f) {
+        player.position = authoritativePosition;
+        return;
+    }
+
+    const float alpha = 1.0f - std::exp(-14.0f * deltaTime);
+    player.position.x += dx * alpha;
+    player.position.y += dy * alpha;
+}
+
+Color ParseHexColor(const std::string& hex)
+{
+    if (hex.size() != 7 || hex[0] != '#') {
+        return WHITE;
+    }
+
+    try {
+        const auto r = static_cast<unsigned char>(
+            std::stoul(hex.substr(1, 2), nullptr, 16));
+        const auto g = static_cast<unsigned char>(
+            std::stoul(hex.substr(3, 2), nullptr, 16));
+        const auto b = static_cast<unsigned char>(
+            std::stoul(hex.substr(5, 2), nullptr, 16));
+
+        return Color{r, g, b, 255};
+    } catch (...) {
+        return WHITE;
+    }
 }

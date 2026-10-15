@@ -32,7 +32,7 @@ These instructions target macOS with Homebrew.
 
    ```bash
    git clone <REPOSITORY_URL>
-   cd udp-sandbox
+   cd udp-sandbox-client
    ```
 
    Replace `<REPOSITORY_URL>` with the URL of your GitHub repository.
@@ -71,7 +71,7 @@ cmake --build build
 ## Project structure
 
 ```text
-udp-sandbox/
+udp-sandbox-client/
 ├── CMakeLists.txt
 ├── README.md
 ├── LICENSE
@@ -99,10 +99,10 @@ For ready-to-run builds, publish binaries on the repository's **GitHub Releases*
 
 Use a separate archive for each supported platform, for example:
 
-- `udp-sandbox-macos-arm64.zip` — Apple Silicon Macs
-- `udp-sandbox-macos-x86_64.zip` — Intel Macs
-- `udp-sandbox-windows-x86_64.zip` — Windows 64-bit
-- `udp-sandbox-linux-x86_64.tar.gz` — Linux 64-bit
+- `udp-sandbox-client-macos-arm64.zip` — Apple Silicon Macs
+- `udp-sandbox-client-macos-x86_64.zip` — Intel Macs
+- `udp-sandbox-client-windows-x86_64.zip` — Windows 64-bit
+- `udp-sandbox-client-linux-x86_64.tar.gz` — Linux 64-bit
 
 Only list platforms for which you have actually built and tested the game. A macOS build does not run natively on Windows or Linux. Include any required runtime libraries and the `assets/` directory in each archive.
 
