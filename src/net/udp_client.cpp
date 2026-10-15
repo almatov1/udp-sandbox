@@ -160,6 +160,8 @@ void UdpClient::Disconnect()
     hasSnapshot = false;
     selfID = 0;
     players.clear();
+    snapshotSequence = 0;
+    snapshotReceiveTime = 0.0;
 }
 
 bool UdpClient::IsConnected() const
@@ -232,7 +234,19 @@ void UdpClient::Poll()
             selfID = newSelfID;
             players = std::move(newPlayers);
             hasSnapshot = true;
+            snapshotReceiveTime = GetTime();
+            ++snapshotSequence;
             error.clear();
         }
     }
+}
+
+std::uint64_t UdpClient::GetSnapshotSequence() const
+{
+    return snapshotSequence;
+}
+
+double UdpClient::GetSnapshotReceiveTime() const
+{
+    return snapshotReceiveTime;
 }

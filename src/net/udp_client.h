@@ -23,6 +23,9 @@ public:
     const std::vector<RemotePlayer>& GetPlayers() const;
     const std::string& GetError() const;
 
+    std::uint64_t GetSnapshotSequence() const;
+    double GetSnapshotReceiveTime() const;
+
 private:
     int socketFd = -1;
     bool connected = false;
@@ -31,4 +34,7 @@ private:
 
     std::vector<RemotePlayer> players;
     std::string error;
+
+    std::uint64_t snapshotSequence = 0;
+    double snapshotReceiveTime = 0.0;
 };
